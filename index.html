@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Plakit 0.0.0</title>
+
+	<meta charset="utf-8">
+
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body onload="plakit()">
+	<canvas id="grid" width="2000" height="2000"></canvas>
+	<canvas id="plane" width="2000" height="2000"></canvas>
+	<canvas id="reference" width="2000" height="2000"></canvas>
+
+	<div id="iconMenu"></div>
+
+	<div id="iconReference"></div>
+
+	<div id="options">
+		<div class="option-item" onclick="drawDotIcons()" onmouseover="clearCanvas()"><i class="material-icons">trip_origin</i></div>
+		<div class="option-item" onclick="deleteIcons()" onmouseover="clearCanvas()"><i class="material-icons">delete</i></div>
+	</div>
+
+	<!--
+	<div id="options" onmouseover="clearCanvas()">
+		<div class="option-item">
+			<span>Type of lines:</span>
+		</div>
+		<div class="option-item">
+			<span left="10px">Straight line.</span>
+		</div>
+	</div>
+	-->
+
+	<script src="scripts/declaration.js"></script>
+	<script src="scripts/tools.js"></script>
+	<script src="scripts/draw.js"></script>
+	<script src="scripts/lines.js"></script>
+	<script src="scripts/icons.js"></script>
+
+	<script src="scripts/ajax.js"></script>
+
+	<script type="text/javascript">
+
+		/* MODIFICACIÓN DE VARIABLE PARA PRUBAS */
+		dataControl = controlData('plane', 'straightLine');
+		console.log('dataControl', dataControl);
+
+		/*#####################################################*/
+		
+		let minifyCoor = (coorX, coorY) => `${coorX}|${coorY}`;
+		
+		/*#####################################################*/
+
+		/*
+
+		(1, 3, 2, -5) => [-8, -1, 11];
+
+		*/
+
+
+		/* TRABAJANDO */
+		function solveLineEquation(x1, y1, x2, y2){
+			let xIn = y2 - y1
+			let txIn = xIn * (-x1);
+
+			let yIn = x2 - x1;
+			let tyIn = yIn * (-y1);
+
+			return [xIn, -yIn, txIn - tyIn];
+		}
+
+		function esta(x, y, e){
+			if((x * e[0]) + (y * e[1]) + e[2] === 0){
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+
+		function saveLine(localDot){
+			let idDotRegistered = dotMatrix.map(element => element.id);
+			let idLineRegistered = lineMatrix.map(element => element.id);
+			let coorsDotMinified = dotMatrix.map(element => minifyCoor(element.coorX, element.coorY));
+
+			let dotIdentifier = [];
+			let incrementId = 1;
+
+			localDot.forEach(function(elemLocal){
+
+				if(coorsDotMinified.includes(minifyCoor(elemLocal.coorX, elemLocal.coorY))){
+					dotIdentifier.push(idDotRegistered[coorsDotMinified.indexOf(minifyCoor(elemLocal.coorX, elemLocal.coorY))]);
+				} else {
+
+					let newDotElement = {id: Math.max(...idDotRegistered) + incrementId, coorX: elemLocal.coorX, coorY: elemLocal.coorY};
+					incrementId++;
+
+					dotIdentifier.push(newDotElement.id);
+
+					dotMatrix.push(newDotElement);
+				}
+
+			});
+
+			/* TRABAJANDO */
+			let lineEquation = solveLineEquation(localDot[0].coorX, localDot[0].coorY, localDot[1].coorX, localDot[1].coorY);
+
+			lineMatrix.push({id: Math.max(...idLineRegistered) + 1, dots: dotIdentifier, lineEquation: lineEquation});
+
+			console.log(lineMatrix);
+		}
+
+		/*#####################################################*/
+
+	
+
+		/*#####################################################*/
+		let scrollRectification = {gapX: 0, gapY: 0}
+
+		window.addEventListener('scroll', function(){
+			scrollRectification.gapX = window.scrollX;
+			scrollRectification.gapY = window.scrollY;
+		});
+
+		/*#####################################################*/
+
+
+		/*#####################################################*/
+
+		function plakit(){
+			const reference = document.getElementById('reference');
+
+			reference.addEventListener('click', function(event){
+				switch(dataControl.typeObject){
+					case 'straightLine':
+						straightLine();
+					break;
+				}
+			});
+
+			reference.addEventListener('mousemove', function(event){
+				switch(dataControl.typeObject){
+					case 'straightLine':
+						clearCanvas();
+
+						_straightLine();
+
+						pointer(roundGrid(event.clientX), roundGrid(event.clientY), 5);
+					break;
+				}
+			});
+
+			/*#########################################*/
+			/* TRABAJANDO */
+
+			/* COMPROBAR SI EL RATÓN SE ENCUENTRA EN UNA POSICIÓN CERCANA Y NO EN LA POSICIÓN EXACTA .... */
+
+			reference.addEventListener('mousemove', function(event){
+				lineMatrix.forEach(function(element){
+					if(element.id != 0 && esta(event.clientX, event.clientY, element.lineEquation)){
+						console.log(true, event.clientX, event.clientY);
+					} else {
+						console.log(false);
+					}
+				})
+			});
+		}
+
+		drawGrid();
+
+		//ajaxRequest('https://swapi.co/api/planets');
+
+	</script>
+</body>
+</html>
