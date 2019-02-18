@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Plakit1_0_0</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+	<canvas id="grid" width="2000" height="2000"></canvas>
+	<canvas id="plane" width="2000" height="2000"></canvas>
+	<canvas id="reference" width="2000" height="2000"></canvas>
+
+	<div id="options">
+		<div id="straightLine" class="option-item" layer="plane" action="create" type="straightLine"><i class="material-icons">timeline</i></div>
+	</div>
+
+	<script type="text/javascript">
+		
+		const view = {
+			reference: document.getElementById('reference'),
+			straightLine: document.getElementById('straightLine'),
+
+			scrollRectification: {gapX: 0, gapY: 0},
+
+			layer: null,
+			action: null,
+			type: null,
+
+			eventEmitter: function(){
+				this.straightLine.addEventListener('click', function(event){
+					view.layer = this.getAttribute('layer');
+					view.action = this.getAttribute('action');
+					view.type = this.getAttribute('type');
+				})
+
+				this.reference.addEventListener('click', function(event){
+					presenter.onClickEvent({
+						layer: view.layer,
+						action: view.action,
+						type: view.type,
+						data: {
+							coorX: roundGrid(event.clientX + view.scrollRectification.gapX), 
+							coorY: roundGrid(event.clientY + view.scrollRectification.gapY)
+						}
+					});
+				});
+
+				this.reference.addEventListener('mousemove', function(event){
+					presenter.onMoveEvent({
+						layer: view.layer,
+						action: view.action,
+						type: view.type,
+						data: {
+							coorX: roundGrid(event.clientX + view.scrollRectification.gapX), 
+							coorY: roundGrid(event.clientY + view.scrollRectification.gapY)
+						}
+					});
+				});
+
+				window.addEventListener('scroll', function(){
+					view.scrollRectification.gapX = window.scrollX;
+					view.scrollRectification.gapY = window.scrollY;
+				});
+			}
+		}
+
+		const presenter = {
+			temporalData: [],
+
+			onClickEvent: function(configObj){
+				console.log(configObj);
+				switch(configObj.layer){
+					case 'plane':
+						switch(configObj.action){
+							case 'create':
+								switch(configObj.type){
+									case 'straightLine':
+										if(straightLine(configObj, presenter.temporalData)){
+
+											console.log("[Modelo]: Mi turno!");
+
+											presenter.temporalData = [];
+										}
+
+										break;
+									default:
+										cosole.log(`[${configObj.layer}/${configObj.action}/${configObj.type}]`);
+								}
+								break;
+							default:
+								console.log(`[${configObj.layer}/${configObj.action}]`)
+						}
+
+						break;
+					default:
+						console.log(`[${configObj.layer}]`);
+				}
+			},
+
+			onMoveEvent: function(configObj){
+				switch(configObj.layer){
+					case 'plane':
+						switch(configObj.action){
+							case 'create':
+								switch(configObj.type){
+									case 'straightLine':
+
+										clearCanvas();
+
+										let ctx = document.getElementById('reference').getContext("2d");
+
+										if(this.temporalData[0]){
+											drawCanvasLine(ctx, this.temporalData[0].coorX, this.temporalData[0].coorY, configObj.data.coorX, configObj.data.coorY);
+										}
+
+										break;
+									default:
+										cosole.log(`[${configObj.layer}/${configObj.action}/${configObj.type}]`);
+								}
+								break;
+							default:
+								console.log(`[${configObj.layer}/${configObj.action}]`)
+						}
+
+						break;
+					default:
+						console.log(`[${configObj.layer}]`);
+				}
+			}
+		}
+
+
+
+		view.eventEmitter();
+
+
+		function straightLine(configObj, temporalData){
+			switch(temporalData.length){
+				case 0:
+					temporalData.push(configObj.data);
+
+					break;
+				case 1:
+					temporalData.push(configObj.data);
+
+					drawCanvasStraightLine(configObj.layer, temporalData);
+
+					return true;
+			}
+		}
+
+		function drawCanvasStraightLine(layer = 'reference', data){
+			let ctx = document.getElementById(layer).getContext('2d');
+
+			ctx.beginPath();
+			ctx.moveTo(data[0].coorX, data[0].coorY);
+			ctx.lineTo(data[1].coorX, data[1].coorY);
+			ctx.stroke();
+			ctx.closePath();
+
+		}
+
+
+		function drawCanvasLine(ctx, initialX, initialY, finalX, finalY){
+	ctx.beginPath();
+	ctx.moveTo(initialX, initialY);
+	ctx.lineTo(finalX, finalY);
+	ctx.stroke();
+}
+
+function clearCanvas(canvas = document.getElementById('reference')){
+	let ctx = canvas.getContext('2d');
+	ctx.clearRect(0, 0, canvas.getAttribute('width'), canvas.getAttribute('height'));
+}
+
+
+
+	let roundGrid = (value => Math.round(value/10) * 10);
+
+
+	const model = {
+		hola: function(){
+			console.log("Hola mundo!");
+		}
+	}
+
+
+
+
+	</script>
+</body>
+</html>
